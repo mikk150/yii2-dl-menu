@@ -1,0 +1,14 @@
+{
+  "name": "mikk150/yii-dl-menu",
+  "description": "DL-menu navigation for yii2",
+  "type": "yii2-extension",
+  "keywords": ["yii2","extension","dlmenu","dl-menu","menu", "navigation"],
+  "requires" :{
+    "yiisoft/yii2": "*",
+  },
+  "autoload": {
+    "psr-4": {
+      "mikk150\\dlmenu\\": "src/"
+    }
+  }
+}

@@ -152,9 +152,11 @@ class Nav extends Widget
     {
         $widgetId = $this->options['id'];
         $menuOptions = Json::encode($this->dlOptions);
-        return <<<JS
-        $("#$widgetId").dlmenu($menuOptions);
-JS;
+        return <<<JAVASCRIPT
+        (function ($) {
+            $("#$widgetId").dlmenu($menuOptions);
+        })(jQuery)
+JAVASCRIPT;
     }
 
     /**

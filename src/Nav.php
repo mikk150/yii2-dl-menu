@@ -169,7 +169,7 @@ class Nav extends Widget
             $this->dlOnLinkClick = new JsExpression('function( el, name ) { return false; }');
         }
         if (!$this->dlBackLabel) {
-            $this->dlAnimationClasses = Yii::t('dlmenu', 'Back');
+            $this->dlBackLabel = Yii::t('dlmenu', 'Back');
         }
         if (!$this->dlUseActiveItemAsBackLabel) {
             $this->dlUseActiveItemAsBackLabel = false;

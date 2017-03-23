@@ -13,6 +13,7 @@ use yii\helpers\ArrayHelper;
 use yii\base\Widget;
 use yii\helpers\Html;
 use yii\helpers\Json;
+use yii\web\JsExpression;
 
 /**
  * Nav renders a nav HTML component.
@@ -52,18 +53,17 @@ class Nav extends Widget
      * @see \yii\helpers\Html::renderTagAttributes() for details on how attributes are being rendered.
      */
     public $options = [];
+
     /**
      * @var array the HTML attributes for the button.
      */
     public $buttonOptions = [];
+
     /**
-     * @var array the dl-menu options
-     */
-    public $dlOptions = [];
-    /**
-     * 
+     *
      */
     public $parentMenuOptions = [];
+
     /**
      * @var array list of items in the nav widget. Each array element represents a single
      * menu item which can be either a string or an array with the following structure:
@@ -82,20 +82,24 @@ class Nav extends Widget
      * If a menu item is a string, it will be rendered directly without HTML encoding.
      */
     public $items = [];
+
     /**
      * @var boolean whether the nav items labels should be HTML-encoded.
      */
     public $encodeLabels = true;
+
     /**
      * @var boolean whether to automatically activate items according to whether their route setting
      * matches the currently requested route.
      * @see isItemActive
      */
     public $activateItems = true;
+
     /**
      * @var boolean whether to activate parent menu items when one of the corresponding child menu items is active.
      */
     public $activateParents = false;
+
     /**
      * @var string the route used to determine if a menu item is active or not.
      * If not set, it will use the route of the current request.
@@ -103,6 +107,7 @@ class Nav extends Widget
      * @see isItemActive
      */
     public $route;
+
     /**
      * @var array the parameters used to determine if a menu item is active or not.
      * If not set, it will use `$_GET`.
@@ -111,12 +116,39 @@ class Nav extends Widget
      */
     public $params;
 
+    public $dlAnimationClasses;
+
+    public $dlOnLevelClick;
+
+    public $dlOnLinkClick;
+
+    public $dlBackLabel;
+
+    public $dlUseActiveItemAsBackLabel;
+
+    public $dlUseActiveItemAsLink;
+
+    public $dlResetOnClose;
+
+
 
     /**
      * Initializes the widget.
      */
     public function init()
     {
+        $translationMap = Yii::$app->i18n->translations;
+        if (!ArrayHelper::getValue($translationMap, 'dlmenu*')) {
+            Yii::$app->i18n->translations['dlmenu*'] = [
+                'class' => 'yii\i18n\PhpMessageSource',
+                'basePath' => '@vendor/mikk150/yii-dl-menu/src/messages',
+                'sourceLanguage' => 'en-US',
+                'fileMap' => [
+                    'dlmenu' => 'dlmenu.php',
+                ],
+            ];
+        }
+
         parent::init();
         if ($this->route === null && Yii::$app->controller !== null) {
             $this->route = Yii::$app->controller->getRoute();
@@ -126,6 +158,27 @@ class Nav extends Widget
         }
         if (!isset($this->options['id'])) {
             $this->options['id'] = $this->getId();
+        }
+        if (!$this->dlAnimationClasses) {
+            $this->dlAnimationClasses = ['classin' => 'dl-animate-in-1', 'classout' => 'dl-animate-out-1'];
+        }
+        if (!$this->dlOnLevelClick) {
+            $this->dlOnLevelClick = new JsExpression('function( el, name ) { return false; }');
+        }
+        if (!$this->dlOnLinkClick) {
+            $this->dlOnLinkClick = new JsExpression('function( el, name ) { return false; }');
+        }
+        if (!$this->dlBackLabel) {
+            $this->dlAnimationClasses = Yii::t('dlmenu', 'Back');
+        }
+        if (!$this->dlUseActiveItemAsBackLabel) {
+            $this->dlUseActiveItemAsBackLabel = false;
+        }
+        if (!$this->dlUseActiveItemAsLink) {
+            $this->dlUseActiveItemAsLink = false;
+        }
+        if (!$this->dlResetOnClose) {
+            $this->dlResetOnClose = true;
         }
 
         Html::addCssClass($this->options, ['dl-menuwrapper']);
@@ -142,7 +195,7 @@ class Nav extends Widget
         $this->getView()->registerJs($this->generateJs());
         return Html::tag(
             'div',
-            $this->renderButton().
+            $this->renderButton() .
             $this->renderItems(),
             $this->options
         );
@@ -151,7 +204,15 @@ class Nav extends Widget
     public function generateJs()
     {
         $widgetId = $this->options['id'];
-        $menuOptions = Json::encode($this->dlOptions);
+        $menuOptions = Json::htmlEncode([
+            'animationClasses' => $this->dlAnimationClasses,
+            'onLevelClick' => $this->dlOnLevelClick,
+            'onLinkClick' => $this->dlOnLinkClick,
+            'backLabel' => $this->dlBackLabel,
+            'useActiveItemAsBackLabel' => $this->dlUseActiveItemAsBackLabel,
+            'useActiveItemAsLink' => $this->dlUseActiveItemAsLink,
+            'resetOnClose' => $this->dlResetOnClose,
+        ]);
         return <<<JAVASCRIPT
         (function ($) {
             $("#$widgetId").dlmenu($menuOptions);
@@ -177,7 +238,7 @@ JAVASCRIPT;
 
     public function renderButton()
     {
-        return Html::button(ArrayHelper::getValue($this->buttonOptions,'content'), $this->buttonOptions); 
+        return Html::button(ArrayHelper::getValue($this->buttonOptions, 'content'), $this->buttonOptions);
     }
 
     /**
